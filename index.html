@@ -1,0 +1,408 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Snake Leader 🐍</title>
+    <meta name="description" content="Eat • Grow • Survive • Become the Leader. A geometric arcade Snake Leader game with HTML5 Canvas, Web Audio sound effects, and local leaderboard." />
+    <meta property="og:title" content="Snake Leader 🐍" />
+    <meta property="og:description" content="Eat • Grow • Survive • Become the Leader" />
+    <meta property="og:type" content="website" />
+
+    <!-- Google Fonts for Geometric Typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700;800&family=Outfit:wght@600;800;900&family=Plus+Jakarta+Sans:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <!-- Geometric Balance Stylesheet -->
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <!-- Ambient Lighting Effect -->
+    <div class="ambient-glow" aria-hidden="true"></div>
+
+    <div id="app-shell">
+      <!-- ====================================================================
+           1. GEOMETRIC ARCADE HEADER
+           ==================================================================== -->
+      <header class="geo-header">
+        <div class="brand-section" id="brand-home-btn" title="Snake Leader Arcade">
+          <div class="brand-icon-box" aria-hidden="true">
+            <span>🐍</span>
+          </div>
+          <div class="brand-info">
+            <h1 class="brand-title">Snake Leader</h1>
+            <p class="brand-subtitle">Eat • Grow • Survive</p>
+          </div>
+        </div>
+
+        <!-- Real-Time Scoreboard HUD (Monospace Numbers) -->
+        <div class="header-stats-group" aria-label="Game Stats">
+          <div class="header-stat-box">
+            <span class="header-stat-label">Current Score</span>
+            <span class="header-stat-value emerald" id="hud-score">00000</span>
+          </div>
+          <div class="header-stat-box">
+            <span class="header-stat-label">High Score</span>
+            <span class="header-stat-value" id="hud-high">00000</span>
+          </div>
+          <div class="header-stat-box">
+            <span class="header-stat-label">Level</span>
+            <span class="header-stat-value emerald" id="hud-level">01</span>
+          </div>
+        </div>
+
+        <!-- Quick Header Controls -->
+        <div class="header-actions">
+          <button id="btn-theme-toggle" class="btn-theme-circle" title="Toggle Light / Dark Theme" aria-label="Toggle Theme">
+            <span id="theme-icon">🌙</span>
+          </button>
+          <button id="btn-header-menu" class="btn-header-menu" aria-label="Main Menu">
+            Menu
+          </button>
+        </div>
+      </header>
+
+      <!-- ====================================================================
+           2. MAIN APP CONTENT CONTAINER
+           ==================================================================== -->
+      <main id="main-content-area" class="geo-main-layout">
+
+        <!-- ==================================================================
+             SCREEN 1: GAMEPLAY & DASHBOARD ARENA
+             ================================================================== -->
+        <section id="screen-game" class="screen active" aria-label="Game Arena">
+          
+          <!-- Left Sidebar: Leaderboard & Quick Settings -->
+          <aside class="geo-sidebar" id="sidebar-left">
+            <!-- Mini Leaderboard Card -->
+            <div class="geo-card" style="flex: 1;">
+              <div class="geo-card-header">
+                <h2 class="geo-card-title">🏆 Leaderboard</h2>
+              </div>
+              <div class="mini-leaderboard" id="mini-leaderboard-list">
+                <!-- Injected via JavaScript -->
+              </div>
+              <button id="btn-sidebar-view-leaderboard" class="btn-card-action" aria-label="View Full Leaderboard">
+                View All
+              </button>
+            </div>
+
+            <!-- Quick Settings Card -->
+            <div class="geo-card">
+              <div class="geo-card-header">
+                <h2 class="geo-card-title">⚙️ Quick Settings</h2>
+              </div>
+              <div class="setting-item-compact">
+                <span class="setting-label-compact">Sound Effects</span>
+                <label class="geo-switch" aria-label="Toggle Sound Effects">
+                  <input type="checkbox" id="setting-sound-toggle" checked />
+                  <span class="geo-slider"></span>
+                </label>
+              </div>
+              <div class="setting-item-compact">
+                <span class="setting-label-compact">Background Music</span>
+                <label class="geo-switch" aria-label="Toggle Background Music">
+                  <input type="checkbox" id="setting-music-toggle" />
+                  <span class="geo-slider"></span>
+                </label>
+              </div>
+            </div>
+          </aside>
+
+          <!-- Center Column: Canvas Game Arena -->
+          <section class="geo-arena-section">
+            <div class="arena-frame" id="canvas-wrapper">
+              <div class="arena-grid-texture" aria-hidden="true"></div>
+              <canvas id="game-canvas" width="500" height="500" aria-label="Snake Arena Canvas" role="img"></canvas>
+              <div id="canvas-toast" class="canvas-toast" aria-live="polite"></div>
+
+              <!-- Floating Action HUD Capsule -->
+              <div class="hud-capsule-bar" id="hud-capsule-bar">
+                <button id="btn-hud-pause" class="btn-capsule-icon" title="Pause Game (P / Space)" aria-label="Pause Game">
+                  <span id="pause-icon">⏸️</span>
+                </button>
+                <button id="btn-start-game" class="btn-capsule-main" aria-label="Start Game">
+                  <span id="start-btn-label">Start Game</span>
+                </button>
+                <button id="btn-hud-restart" class="btn-capsule-icon" title="Restart Game" aria-label="Restart Game">
+                  <span>🔄</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Mobile Touch Directional Controls -->
+            <div class="mobile-dpad-container" id="mobile-controls" aria-label="Mobile Directional Pad">
+              <div class="dpad-row">
+                <button id="dpad-up" class="dpad-btn" aria-label="Move Up">↑</button>
+              </div>
+              <div class="dpad-row">
+                <button id="dpad-left" class="dpad-btn" aria-label="Move Left">←</button>
+                <button id="dpad-down" class="dpad-btn" aria-label="Move Down">↓</button>
+                <button id="dpad-right" class="dpad-btn" aria-label="Move Right">→</button>
+              </div>
+            </div>
+          </section>
+
+          <!-- Right Sidebar: Controls, Pro Tips, Mobile Action -->
+          <aside class="geo-sidebar" id="sidebar-right">
+            <!-- Game Controls Keypad Card -->
+            <div class="geo-card">
+              <div class="geo-card-header">
+                <h2 class="geo-card-title">🕹️ Game Controls</h2>
+              </div>
+              <div class="keypad-grid" aria-label="WASD Keys">
+                <div class="geo-key key-w" id="key-hint-w">W</div>
+                <div class="geo-key key-a" id="key-hint-a">A</div>
+                <div class="geo-key key-s" id="key-hint-s">S</div>
+                <div class="geo-key key-d" id="key-hint-d">D</div>
+              </div>
+              <p style="font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-dim); text-align: center; margin-top: 0.5rem;">
+                Use WASD or Arrows
+              </p>
+            </div>
+
+            <!-- Pro Tips Card -->
+            <div class="geo-card card-pro-gradient" style="flex: 1;">
+              <div class="tip-glow-orb" aria-hidden="true"></div>
+              <div class="geo-card-header" style="border-bottom-color: var(--border-emerald);">
+                <h2 class="geo-card-title" style="color: var(--text-emerald);">⚡ Pro Tips</h2>
+              </div>
+              <ul class="pro-tips-list">
+                <li><span class="tip-dot">•</span> <span>Speed increases with each level reached.</span></li>
+                <li><span class="tip-dot">•</span> <span>Catch golden bonus orbs for <strong>2x points</strong>.</span></li>
+                <li><span class="tip-dot">•</span> <span>Never hit outer walls or your own body!</span></li>
+              </ul>
+            </div>
+
+            <!-- Mobile Action Button -->
+            <button id="btn-toggle-mobile-dpad" class="btn-mobile-toggle" aria-label="Toggle Mobile Controls">
+              <span>Touch Controls</span>
+              <span>🎮</span>
+            </button>
+          </aside>
+        </section>
+
+        <!-- ==================================================================
+             SCREEN 2: FULL LEADERBOARD SCREEN
+             ================================================================== -->
+        <section id="screen-leaderboard" class="screen view-screen-container" aria-label="Leaderboard View">
+          <div class="geo-panel-card">
+            <div class="panel-header">
+              <h2 class="panel-title">
+                <span>🏆</span> Top 10 Leaders
+              </h2>
+              <button id="btn-clear-leaderboard" class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.75rem;" aria-label="Clear Leaderboard">
+                Clear All
+              </button>
+            </div>
+
+            <!-- Dynamic Leaderboard Items Container -->
+            <div class="leaderboard-list" id="leaderboard-list" role="list">
+              <!-- Populated via JavaScript -->
+            </div>
+
+            <div class="btn-group-row">
+              <button id="btn-leaderboard-play" class="btn btn-primary" aria-label="Play Now">
+                <span>🎮</span> Play Now
+              </button>
+              <button id="btn-leaderboard-home" class="btn btn-secondary" aria-label="Back to Game">
+                <span>🏠</span> Return to Game
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================================================================
+             SCREEN 3: HOW TO PLAY SCREEN
+             ================================================================== -->
+        <section id="screen-how-to-play" class="screen view-screen-container" aria-label="How to Play View">
+          <div class="geo-panel-card">
+            <div class="panel-header">
+              <h2 class="panel-title">
+                <span>📖</span> How to Play
+              </h2>
+            </div>
+
+            <div class="instructions-list">
+              <div class="instruction-step">
+                <div class="step-num">1</div>
+                <div class="step-text">Control the snake using <strong>WASD</strong>, <strong>Arrow Keys</strong>, or on-screen touch D-Pad.</div>
+              </div>
+              <div class="instruction-step">
+                <div class="step-num">2</div>
+                <div class="step-text">Eat food to score points (+10 for Level 1, +20 for Level 2, +30 for Level 3).</div>
+              </div>
+              <div class="instruction-step">
+                <div class="step-num">3</div>
+                <div class="step-text">Every food eaten expands your snake's length and unlocks bonus speed.</div>
+              </div>
+              <div class="instruction-step">
+                <div class="step-num">4</div>
+                <div class="step-text">Avoid hitting outer boundary walls and your own tail.</div>
+              </div>
+              <div class="instruction-step">
+                <div class="step-num">5</div>
+                <div class="step-text">Record your initials after game over to enter the Top 10 Hall of Fame!</div>
+              </div>
+            </div>
+
+            <div class="btn-group-row">
+              <button id="btn-howtoplay-start" class="btn btn-primary" aria-label="Start Game">
+                <span>🎮</span> Start Game
+              </button>
+              <button id="btn-howtoplay-home" class="btn btn-secondary" aria-label="Back to Game">
+                <span>🏠</span> Return to Game
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================================================================
+             SCREEN 4: SETTINGS SCREEN
+             ================================================================== -->
+        <section id="screen-settings" class="screen view-screen-container" aria-label="Settings View">
+          <div class="geo-panel-card">
+            <div class="panel-header">
+              <h2 class="panel-title">
+                <span>⚙️</span> Game Settings
+              </h2>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 1.25rem;">
+              <!-- Starting Difficulty -->
+              <div style="display: flex; flex-direction: column; gap: 0.4rem;">
+                <span style="font-size: 0.8rem; font-weight: 800; text-transform: uppercase; color: var(--text-muted);">Starting Difficulty</span>
+                <div class="segmented-control" role="radiogroup" aria-label="Difficulty Selector">
+                  <button type="button" class="segment-btn" data-speed="easy">Easy</button>
+                  <button type="button" class="segment-btn active" data-speed="normal">Normal</button>
+                  <button type="button" class="segment-btn" data-speed="hard">Hard</button>
+                </div>
+              </div>
+
+              <!-- Reset to Defaults -->
+              <button id="btn-settings-reset" class="btn btn-secondary" style="width: 100%; font-size: 0.8rem;" aria-label="Reset Settings">
+                🔄 Reset to Defaults
+              </button>
+            </div>
+
+            <div class="btn-group-row">
+              <button id="btn-settings-home" class="btn btn-primary" aria-label="Return to Game">
+                <span>🏠</span> Return to Game
+              </button>
+            </div>
+          </div>
+        </section>
+
+      </main>
+
+      <!-- ====================================================================
+           3. GEOMETRIC FOOTER TELEMETRY BAR
+           ==================================================================== -->
+      <footer class="geo-footer">
+        <div>v2.4.0 Stable Build</div>
+        <div class="footer-telemetry">
+          <span>Latency: 12ms</span>
+          <span>Engine: Canvas-V1</span>
+          <span id="hud-speed" style="color: var(--text-emerald);">60 FPS</span>
+        </div>
+      </footer>
+    </div>
+
+    <!-- ======================================================================
+         MODAL 1: PAUSE MODAL
+         ====================================================================== -->
+    <div id="modal-pause" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="pause-title">
+      <div class="modal-card">
+        <div class="modal-icon" aria-hidden="true">⏸️</div>
+        <h2 id="pause-title" class="modal-title">GAME PAUSED</h2>
+        <p class="modal-desc">Take a breather, the leader's throne is waiting for you!</p>
+
+        <div class="modal-actions">
+          <button id="btn-pause-resume" class="btn btn-primary" aria-label="Resume Game">
+            <span>▶️</span> Resume Game
+          </button>
+          <button id="btn-pause-restart" class="btn btn-secondary" aria-label="Restart Game">
+            <span>🔄</span> Restart
+          </button>
+          <button id="btn-pause-exit" class="btn btn-secondary" aria-label="Exit to Menu">
+            <span>🏠</span> Close Menu
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======================================================================
+         MODAL 2: GAME OVER MODAL
+         ====================================================================== -->
+    <div id="modal-game-over" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="gameover-title">
+      <div class="modal-card">
+        <div class="modal-icon" aria-hidden="true">💀</div>
+        <h2 id="gameover-title" class="modal-title">GAME OVER</h2>
+
+        <!-- High Score Notification -->
+        <div id="new-highscore-badge" class="new-highscore-badge">
+          <span>🎉</span> NEW HIGH SCORE!
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="gameover-stats">
+          <div class="gameover-stat-box">
+            <span class="stat-box-label">Score</span>
+            <span class="stat-box-num accent" id="gameover-score">00000</span>
+          </div>
+          <div class="gameover-stat-box">
+            <span class="stat-box-label">Level</span>
+            <span class="stat-box-num" id="gameover-level">01</span>
+          </div>
+          <div class="gameover-stat-box">
+            <span class="stat-box-label">High Score</span>
+            <span class="stat-box-num" id="gameover-high">00000</span>
+          </div>
+        </div>
+
+        <!-- Name Input for Leaderboard -->
+        <div style="margin-bottom: 1.25rem; text-align: left;">
+          <label for="player-name-input" style="display: block; font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-dim); margin-bottom: 0.4rem;">Enter Your Name:</label>
+          <div style="display: flex; gap: 0.5rem;">
+            <input type="text" id="player-name-input" class="text-input" maxlength="14" placeholder="PRANETH" autocomplete="off" />
+            <button id="btn-save-score" class="btn btn-primary" style="padding: 0 1.25rem;" aria-label="Save Score">Save</button>
+          </div>
+        </div>
+
+        <!-- Modal Actions -->
+        <div class="modal-actions">
+          <button id="btn-gameover-restart" class="btn btn-primary" aria-label="Play Again">
+            <span>🔄</span> Play Again
+          </button>
+          <button id="btn-gameover-leaderboard" class="btn btn-secondary" aria-label="View Leaderboard">
+            <span>🏆</span> Leaderboard
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======================================================================
+         MODAL 3: CONFIRM CLEAR LEADERBOARD
+         ====================================================================== -->
+    <div id="modal-confirm-clear" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="confirm-clear-title">
+      <div class="modal-card">
+        <div class="modal-icon" aria-hidden="true">⚠️</div>
+        <h2 id="confirm-clear-title" class="modal-title">Clear Leaderboard?</h2>
+        <p class="modal-desc">Are you sure you want to delete all leaderboard records? This cannot be undone.</p>
+
+        <div class="modal-actions">
+          <button id="btn-confirm-clear-yes" class="btn btn-danger" aria-label="Confirm Clear">
+            Yes, Delete All
+          </button>
+          <button id="btn-confirm-clear-cancel" class="btn btn-secondary" aria-label="Cancel">
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Game Script -->
+    <script type="module" src="./script.js"></script>
+  </body>
+</html>

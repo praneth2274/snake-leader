@@ -1,0 +1,6 @@
+{
+  "name": "Snake Leader",
+  "description": "A modern, responsive Snake Leader arcade game built with HTML5 Canvas, Web Audio sound effects, customizable themes, local leaderboard, and intuitive touch and keyboard controls.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
